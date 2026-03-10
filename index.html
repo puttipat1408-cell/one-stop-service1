@@ -1,0 +1,2233 @@
+<!doctype html>
+<html lang="th" class="h-full">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบบันทึกสถิติการให้บริการ - สำนักงานคลังจังหวัดสกลนคร</title>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <script src="/_sdk/element_sdk.js"></script>
+    <script src="/_sdk/data_sdk.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Sarabun', sans-serif;
+        }
+
+        .service-row:hover {
+            background-color: #f0fdf4;
+        }
+
+        .sub-service {
+            padding-left: 2rem;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .toast-success {
+            background-color: #16a34a;
+        }
+
+        .toast-error {
+            background-color: #dc2626;
+        }
+
+        /* สำหรับป้องกันการ Scroll หน้าจอตอนเซ็นชื่อบนมือถือ */
+        .signature-pad {
+            touch-action: none;
+        }
+    </style>
+    <style>
+        body {
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body class="h-full bg-gradient-to-br bg-blue-50 via-white to-teal-50">
+    <div id="app" class="h-full w-full overflow-auto">
+        <header class="bg-gradient-to-r bg-blue-700 to-teal-600 text-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 py-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 id="report-title" class="text-2xl font-bold">
+                            รายงานสรุปผลการให้บริการและปัญหา/อุปสรรคในการบริการประจำวัน</h1>
+                        <p id="office-name" class="text-white-700 mt-1">สำนักงานคลังจังหวัดสกลนคร</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="bg-white/20 rounded-lg px-4 py-2"><label
+                                class="text-sm text-white-700">วันที่</label> <input type="date" id="report-date"
+                                class="bg-transparent border-none text-white font-semibold focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <nav class="bg-white border-b shadow-sm sticky top-0 z-10">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex gap-1"><button onclick="showTab('input')" id="tab-input"
+                        class="px-6 py-3 font-medium text-emerald-700 border-b-2 border-emerald-600 bg-emerald-50"> 📝
+                        บันทึกข้อมูล </button> <button onclick="showTab('summary')" id="tab-summary"
+                        class="px-6 py-3 font-medium text-gray-500 hover:text-emerald-600 border-b-2 border-transparent hover:bg-emerald-50 transition">
+                        📊 สรุปรายวัน </button> <button onclick="showTab('history')" id="tab-history"
+                        class="px-6 py-3 font-medium text-gray-500 hover:text-emerald-600 border-b-2 border-transparent hover:bg-emerald-50 transition">
+                        📅 ประวัติย้อนหลัง </button>
+                </div>
+            </div>
+        </nav>
+        <main id="content-input" class="max-w-7xl mx-auto px-4 py-6">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="bg-gradient-to-r bg-blue-700 to-teal-500 text-white p-4">
+                    <div class="grid grid-cols-12 gap-2 text-center text-sm font-semibold">
+                        <div class="col-span-3">
+                            เรื่องที่ขอรับบริการ
+                        </div>
+                        <div class="col-span-1">
+                            จุดบริการ (ราย)
+                        </div>
+                        <div class="col-span-1">
+                            ทางโทรศัพท์ (ราย)
+                        </div>
+                        <div class="col-span-1">
+                            รวม
+                        </div>
+                        <div class="col-span-1">
+                            ณ จุด OSS
+                        </div>
+                        <div class="col-span-1">
+                            ส่งต่อผู้เชี่ยวชาญ
+                        </div>
+                        <div class="col-span-4">
+                            ระดับความพึงพอใจ (1-5)
+                        </div>
+                    </div>
+                </div>
+                <div id="service-form" class="divide-y divide-gray-100">
+                    <div class="bg-blue-50 px-4 py-3"><span class="font-bold text-blue-800">1. งานบริการ One Stop
+                            Service (ณ จุดประชาสัมพันธ์)</span>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-2 items-center" data-service="1.1">
+                        <div class="col-span-3 sub-service text-sm">
+                            1.1 บริการลงทะเบียน/อนุมัติการลงทะเบียนในระบบ e-GP
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-2 items-center" data-service="1.2">
+                        <div class="col-span-3 sub-service text-sm">
+                            1.2 บริการออกหนังสือรับรองบำเหน็จค้ำประกัน
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-2 items-center" data-service="1.3">
+                        <div class="col-span-3 sub-service text-sm">
+                            1.3 บริการข้อมูลด้านเศรษฐกิจ
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-2 items-center" data-service="1.4">
+                        <div class="col-span-3 sub-service text-sm">
+                            1.4 รับสมัครสมาชิก/นำส่งเงินสะสม กอช.
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-2 items-center" data-service="1.5">
+                        <div class="col-span-3 sub-service text-sm flex items-center gap-2">
+                            1.5 อื่น ๆ <input type="text" class="other-text border rounded px-2 py-1 text-sm flex-1"
+                                placeholder="ระบุ...">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 px-4 py-3"><span class="font-bold text-blue-800">2.
+                            ด้านการจัดซื้อจัดจ้างภาครัฐ</span>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-2 items-center" data-service="2.1">
+                        <div class="col-span-3 sub-service text-sm">
+                            2.1 พรบ. + ระเบียบจัดซื้อจัดจ้าง
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-2 items-center" data-service="2.2">
+                        <div class="col-span-3 sub-service text-sm">
+                            2.2 ระบบ e-GP
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 px-4 py-3"><span class="font-bold text-blue-800">3. New GFMIS
+                            Thai</span>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-2 items-center" data-service="3.1">
+                        <div class="col-span-3 sub-service text-sm">
+                            3.1 ระเบียบเบิกจ่ายเงินการคลัง
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-2 items-center" data-service="3.2">
+                        <div class="col-span-3 sub-service text-sm">
+                            3.2 ระบบ New GFMIS Thai
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-2 items-center" data-service="3.3">
+                        <div class="col-span-3 sub-service text-sm flex items-center gap-2">
+                            3.3 อื่น ๆ <input type="text" class="other-text border rounded px-2 py-1 text-sm flex-1"
+                                placeholder="ระบุ...">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 px-4 py-3"><span class="font-bold text-blue-800">4.
+                            บำเหน็จบำนาญและสวัสดิการรักษาพยาบาล (Digital Pension)</span>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-2 items-center" data-service="4.1">
+                        <div class="col-span-3 sub-service text-sm">
+                            4.1 พรบ. + ระเบียบ บำเหน็จบำนาญ
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-2 items-center" data-service="4.2">
+                        <div class="col-span-3 sub-service text-sm">
+                            4.2 ระบบ D-Pension
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 px-4 py-3"><span class="font-bold text-blue-800">5.
+                            กฎหมายระเบียบการเงินการคลัง</span>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-2 items-center" data-service="5.1">
+                        <div class="col-span-3 sub-service text-sm">
+                            5.1 เงินสวัสดิการเกี่ยวกับการรักษาพยาบาล
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-2 items-center" data-service="5.2">
+                        <div class="col-span-3 sub-service text-sm">
+                            5.2 เงินสวัสดิการเกี่ยวกับการศึกษาของบุตร
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-2 items-center" data-service="5.3">
+                        <div class="col-span-3 sub-service text-sm">
+                            5.3 ค่าใช้จ่ายการจัดฝึกอบรม/จัดงาน/ประชุมระหว่างประเทศ
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-2 items-center" data-service="5.4">
+                        <div class="col-span-3 sub-service text-sm">
+                            5.4 ค่าใช้จ่ายในการเดินทาง
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-2 items-center" data-service="5.5">
+                        <div class="col-span-3 sub-service text-sm">
+                            5.5 ค่าเช่าบ้านข้าราชการ
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-2 items-center" data-service="5.6">
+                        <div class="col-span-3 sub-service text-sm">
+                            5.6 ค่าใช้จ่ายในการบริหารงาน
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-2 items-center" data-service="5.7">
+                        <div class="col-span-3 sub-service text-sm">
+                            5.7 ตรวจสอบภายใน/ควบคุมภายใน/บริหารความเสี่ยง
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-2 items-center" data-service="5.8">
+                        <div class="col-span-3 sub-service text-sm flex items-center gap-2">
+                            5.8 อื่น ๆ <input type="text" class="other-text border rounded px-2 py-1 text-sm flex-1"
+                                placeholder="ระบุ...">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-3 items-center bg-blue-50"
+                        data-service="6">
+                        <div class="col-span-3 font-bold text-blue-800">
+                            6. ข้อมูลด้านเศรษฐกิจการคลัง
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-3 items-center bg-blue-50"
+                        data-service="7">
+                        <div class="col-span-3 font-bold text-blue-800">
+                            7. งานนโยบายกระทรวง/กรม/จังหวัด
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center counter-input" value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center phone-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1 text-center font-semibold total-display bg-gray-100 rounded py-1">0</div>
+                        <div class="col-span-1">
+                            <input type="number" min="0" class="w-full border rounded px-2 py-1 text-center oss-input"
+                                value="0">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" min="0"
+                                class="w-full border rounded px-2 py-1 text-center expert-input" value="0">
+                        </div>
+                        <div
+                            class="col-span-4 flex justify-between items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-inner sat-group">
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 1">😠</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-1"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 2">😕</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-2"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 3">😐</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-3"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 4">🙂</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-4"
+                                    value="0"></div>
+                            <div class="flex flex-col items-center w-full"><span class="text-sm leading-none mb-0.5"
+                                    title="ระดับ 5">😊</span><input type="number" min="0"
+                                    class="w-full border rounded px-1 py-0.5 text-center text-xs sat-input sat-input-5"
+                                    value="0"></div>
+                        </div>
+                    </div>
+                    <div
+                        class="grid grid-cols-12 gap-2 px-4 py-3 items-center bg-gradient-to-r bg-blue-700 to-teal-500 text-white font-bold">
+                        <div class="col-span-3">
+                            รวมทั้งหมด
+                        </div>
+                        <div class="col-span-1 text-center">
+                            <span id="total-counter">0</span>
+                        </div>
+                        <div class="col-span-1 text-center">
+                            <span id="total-phone">0</span>
+                        </div>
+                        <div class="col-span-1 text-center text-lg">
+                            <span id="table-grand-total">0</span>
+                        </div>
+                        <div class="col-span-1 text-center">
+                            <span id="total-oss">0</span>
+                        </div>
+                        <div class="col-span-1 text-center">
+                            <span id="total-expert">0</span>
+                        </div>
+                        <div class="col-span-4 grid grid-cols-5 gap-1 text-center">
+                            <span id="total-sat-1">0</span> <span id="total-sat-2">0</span> <span
+                                id="total-sat-3">0</span> <span id="total-sat-4">0</span> <span
+                                id="total-sat-5">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-blue-50 p-4 border-t">
+                    <h3 class="font-semibold text-blue-700 mb-3">👤 สรุปประเภทผู้รับบริการรายวัน</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                        <div><label class="block text-sm text-gray-600 mb-1">ข้าราชการ/เจ้าหน้าที่ของรัฐ</label> <input
+                                type="number" min="0" id="recipient-civil-servant"
+                                class="w-full border rounded-lg px-3 py-2" placeholder="0" value="0">
+                        </div>
+                        <div><label class="block text-sm text-gray-600 mb-1">ผู้ค้ากับภาครัฐ/ผู้ประกอบการ</label> <input
+                                type="number" min="0" id="recipient-contractor"
+                                class="w-full border rounded-lg px-3 py-2" placeholder="0" value="0">
+                        </div>
+                        <div><label class="block text-sm text-gray-600 mb-1">ผู้รับบำนาญ</label> <input type="number"
+                                min="0" id="recipient-pensioner" class="w-full border rounded-lg px-3 py-2"
+                                placeholder="0" value="0">
+                        </div>
+                        <div><label class="block text-sm text-gray-600 mb-1">ผู้มีบัตรสวัสดิการ</label> <input
+                                type="number" min="0" id="recipient-welfare-card"
+                                class="w-full border rounded-lg px-3 py-2" placeholder="0" value="0">
+                        </div>
+                        <div><label class="block text-sm text-gray-600 mb-1">ประชาชนทั่วไป</label> <input type="number"
+                                min="0" id="recipient-general" class="w-full border rounded-lg px-3 py-2"
+                                placeholder="0" value="0">
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-4 border-t">
+                    <h3 class="font-semibold text-gray-700 mb-3">👥 ลงลายมือชื่อเวรบริการ</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="flex flex-col">
+                            <label class="block text-sm text-gray-600 mb-1">เจ้าหน้าที่คนที่ 1</label>
+                            <select id="staff-1"
+                                class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none"
+                                onchange="handleStaffChange(this.id)">
+                                <option value="">-- เลือกชื่อ --</option>
+                            </select>
+                            <div id="sign-box-staff-1"
+                                class="hidden mt-2 p-2 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col items-center relative">
+                                <img id="sign-img-staff-1" src="" class="h-16 object-contain pointer-events-none">
+                                <button onclick="clearSignature('staff-1')"
+                                    class="mt-1 text-xs text-red-500 hover:text-red-700 underline bg-transparent border-none cursor-pointer">ลบ/เซ็นใหม่</button>
+                            </div>
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="block text-sm text-gray-600 mb-1">เจ้าหน้าที่คนที่ 2</label>
+                            <select id="staff-2"
+                                class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none"
+                                onchange="handleStaffChange(this.id)">
+                                <option value="">-- เลือกชื่อ --</option>
+                            </select>
+                            <div id="sign-box-staff-2"
+                                class="hidden mt-2 p-2 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col items-center relative">
+                                <img id="sign-img-staff-2" src="" class="h-16 object-contain pointer-events-none">
+                                <button onclick="clearSignature('staff-2')"
+                                    class="mt-1 text-xs text-red-500 hover:text-red-700 underline bg-transparent border-none cursor-pointer">ลบ/เซ็นใหม่</button>
+                            </div>
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="block text-sm text-gray-600 mb-1">หัวหน้ากลุ่มงาน</label>
+                            <select id="group-head"
+                                class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none"
+                                onchange="handleStaffChange(this.id)">
+                                <option value="">-- เลือกชื่อ --</option>
+                            </select>
+                            <div id="sign-box-group-head"
+                                class="hidden mt-2 p-2 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col items-center relative">
+                                <img id="sign-img-group-head" src="" class="h-16 object-contain pointer-events-none">
+                                <button onclick="clearSignature('group-head')"
+                                    class="mt-1 text-xs text-red-500 hover:text-red-700 underline bg-transparent border-none cursor-pointer">ลบ/เซ็นใหม่</button>
+                            </div>
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="block text-sm text-gray-600 mb-1">คลังจังหวัด</label>
+                            <select id="provincial-treasury"
+                                class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none"
+                                onchange="handleStaffChange(this.id)">
+                                <option value="">-- เลือกชื่อ --</option>
+                            </select>
+                            <div id="sign-box-provincial-treasury"
+                                class="hidden mt-2 p-2 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col items-center relative">
+                                <img id="sign-img-provincial-treasury" src=""
+                                    class="h-16 object-contain pointer-events-none">
+                                <button onclick="clearSignature('provincial-treasury')"
+                                    class="mt-1 text-xs text-red-500 hover:text-red-700 underline bg-transparent border-none cursor-pointer">ลบ/เซ็นใหม่</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-r bg-blue-700 to-teal-500 p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="text-white"><span class="text-lg font-semibold">รวมเฉพาะวัน:</span> <span
+                                id="grand-total" class="text-3xl font-bold ml-4">0</span> <span class="ml-2">ราย</span>
+                        </div><button onclick="saveData()" id="save-btn"
+                            class="bg-white text-emerald-600 px-8 py-3 rounded-xl font-semibold hover:bg-emerald-50 transition shadow-lg flex items-center gap-2">
+                            <span>💾</span> บันทึกข้อมูล </button>
+                    </div>
+                </div>
+                
+            </div>
+        </main>
+        <main id="content-summary" class="max-w-7xl mx-auto px-4 py-6 hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-6">
+                <h2 class="text-xl font-bold text-emerald-800 mb-4">📊 สรุปข้อมูลรายวัน</h2>
+                <div id="summary-content" class="space-y-4">
+                    <p class="text-gray-500 text-center py-8">เลือกวันที่และบันทึกข้อมูลเพื่อดูสรุป</p>
+                </div>
+            </div>
+        </main>
+        <main id="content-history" class="max-w-7xl mx-auto px-4 py-6 hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-6">
+                <h2 class="text-xl font-bold text-emerald-800 mb-4">📅 ประวัติการบันทึกย้อนหลัง</h2>
+                <div id="history-list" class="space-y-2">
+                    <p class="text-gray-500 text-center py-8">ยังไม่มีข้อมูลที่บันทึก</p>
+                </div>
+            </div>
+        </main>
+        <div class="text-center py-6">
+        <p class="text-gray-500 text-lg font-bold">👨‍💻 พัฒนาโดย นางสาวพรรณลิณี แผนเมือง</p>
+        <p class="text-gray-400 text-sm font-bold">นักวิชาการเงินและบัญชี</p>
+        <p class="text-gray-400 text-sm font-bold">กลุ่มงานวิชาการ</p>
+      </div>
+    </div>
+
+    <div id="signature-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-[fadeIn_0.2s_ease-out]">
+            <div class="bg-emerald-600 px-4 py-3 text-white flex justify-between items-center">
+                <h3 class="font-bold">✍️ กรุณาเซ็นลายมือชื่อ</h3>
+                <button onclick="closeSignatureModal()"
+                    class="text-white hover:text-red-200 text-xl font-bold leading-none">&times;</button>
+            </div>
+            <div class="p-4 flex flex-col items-center">
+                <p class="text-sm text-gray-600 mb-2 w-full text-left">ผู้ลงนาม: <span id="sign-person-name"
+                        class="font-bold text-emerald-700"></span></p>
+                <div
+                    class="w-full border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 mb-4 signature-pad flex justify-center items-center">
+                    <canvas id="signature-canvas" width="400" height="200"
+                        class="w-full h-auto cursor-crosshair max-h-48"></canvas>
+                </div>
+                <div class="w-full flex justify-between gap-2">
+                    <button onclick="clearCanvas()"
+                        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition">ล้างกระดาน</button>
+                    <div class="flex gap-2">
+                        <button onclick="closeSignatureModal()"
+                            class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium transition">ยกเลิก</button>
+                        <button onclick="saveSignature()"
+                            class="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition shadow-md">ยืนยัน</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Default configuration
+        const defaultConfig = {
+            office_name: 'สำนักงานคลังจังหวัดสกลนคร',
+            report_title: 'รายงานสรุปผลการให้บริการและปัญหา/อุปสรรคในการบริการประจำวัน',
+            primary_color: '#059669',
+            secondary_color: '#0d9488',
+            background_color: '#ecfdf5',
+            text_color: '#064e3b',
+            accent_color: '#10b981'
+        };
+
+        let allData = [];
+        let currentRecordCount = 0;
+        let isSaving = false; // เพิ่มบรรทัดนี้เพื่อเช็กสถานะการบันทึก
+
+        // ตัวแปรเก็บลายเซ็น
+        let signatures = {
+            'staff-1': null,
+            'staff-2': null,
+            'group-head': null,
+            'provincial-treasury': null
+        };
+        let currentSigningId = '';
+
+        // Staff list
+        const staffList = [
+            { name: 'นางวรจิตร์ ปัญญาดี', position: 'คลังจังหวัดสกลนคร' },
+            { name: 'นาย กฤติเดช อุไพพร', position: 'เจ้าพนักงานธุรการชำนาญงาน' },
+            { name: 'นางสาว สุดารัตน์ ผุยสุ', position: 'เจ้าหน้าที่การคลัง' },
+            { name: 'นางสาว รัฏธิดา วังศรี', position: 'นักวิชาการคลัง' },
+            { name: 'นาง มนัสนันท์ ชาเมืองศรี', position: 'นักวิชาการคลังชำนาญการพิเศษ' },
+            { name: 'นาง วิยะดา นาระคล', position: 'นักวิชาการเงินและบัญชีชำนาญการ' },
+            { name: 'นางสาว สุเพ็ญศรี จันโทภาส', position: 'นักวิชาการคลังชำนาญการ' },
+            { name: 'นาง จงกลณีย์ แสนสงคราม', position: 'นักวิชาการคลังชำนาญการ' },
+            { name: 'นางสาว ชลธิชา ทาระขันธ์', position: 'นักวิชาการคลังปฏิบัติการ' },
+            { name: 'นางสาวพรรณลิณี แผนเมือง', position: 'นักวิชาการเงินและบัญชี' },
+            { name: 'นาย คมสันต์ ล่องวิเชียร', position: 'นักวิชาการคลังชำนาญการพิเศษ' },
+            { name: 'นาง สุจิรา เพชรเกื้อ', position: 'นักวิชาการเงินและบัญชีชำนาญการ' },
+            { name: 'นาย ณรงค์ฤทธิ์ สุนีย์', position: 'เจ้าพนักงานการคลังชำนาญงาน' },
+            { name: 'นางสาว สิริภรณ์ ค้าโชค', position: 'นักวิชาการคลังปฏิบัติการ' },
+            { name: 'นางสาว ยลดา ชาวไทย', position: 'นักวิชาการเงินและบัญชีปฏิบัติการ' },
+            { name: 'นาง จิราพร ศรีพิลา', position: 'เจ้าหน้าที่การคลัง' },
+            { name: 'นางสาว พิตติภรณ์ จิรภัทร์ชนินทร์', position: 'นักวิชาการเงินและบัญชีชำนาญการ' },
+            { name: 'นางสาวศศิวิมล ใหมจันทร์', position: 'นักวิชาการคลังปฏิบัติการ' },
+            { name: 'นายธนวัฒน์ อัคแก้ว', position: 'นักวิชาการคลังปฏิบัติการ' },
+            { name: 'นางสาว อโณทัย ธนะสิทธิ์', position: 'นักวิชาการคลัง' },
+            { name: 'นางสาว ปิ่นกนก อุปพงษ์', position: 'เจ้าหน้าที่คลัง' }
+        ];
+
+        // Service reference data
+        const serviceCategories = [
+            { id: '1.1', name: 'บริการลงทะเบียน/อนุมัติการลงทะเบียนในระบบ e-GP' },
+            { id: '1.2', name: 'บริการออกหนังสือรับรองบำเหน็จค้ำประกัน' },
+            { id: '1.3', name: 'บริการข้อมูลด้านเศรษฐกิจ' },
+            { id: '1.4', name: 'รับสมัครสมาชิก/นำส่งเงินสะสม กอช.' },
+            { id: '1.5', name: 'อื่น ๆ (One Stop Service)' },
+            { id: '2.1', name: 'พรบ. + ระเบียบจัดซื้อจัดจ้าง' },
+            { id: '2.2', name: 'ระบบ e-GP' },
+            { id: '3.1', name: 'ระเบียบเบิกจ่ายเงินการคลัง' },
+            { id: '3.2', name: 'ระบบ New GFMIS Thai' },
+            { id: '3.3', name: 'อื่น ๆ (GFMIS)' },
+            { id: '4.1', name: 'พรบ. + ระเบียบ บำเหน็จบำนาญ' },
+            { id: '4.2', name: 'ระบบ D-Pension' },
+            { id: '5.1', name: 'เงินสวัสดิการเกี่ยวกับการรักษาพยาบาล' },
+            { id: '5.2', name: 'เงินสวัสดิการเกี่ยวกับการศึกษาของบุตร' },
+            { id: '5.3', name: 'ค่าใช้จ่ายการจัดฝึกอบรม/จัดงาน/ประชุมระหว่างประเทศ' },
+            { id: '5.4', name: 'ค่าใช้จ่ายในการเดินทาง' },
+            { id: '5.5', name: 'ค่าเช่าบ้านข้าราชการ' },
+            { id: '5.6', name: 'ค่าใช้จ่ายในการบริหารงาน' },
+            { id: '5.7', name: 'ตรวจสอบภายใน/ควบคุมภายใน/บริหารความเสี่ยง' },
+            { id: '5.8', name: 'อื่น ๆ (กฎหมาย)' },
+            { id: '6', name: 'ข้อมูลด้านเศรษฐกิจการคลัง' },
+            { id: '7', name: 'งานนโยบายกระทรวง/กรม/จังหวัด' }
+        ];
+
+        // Initialize date
+        document.getElementById('report-date').valueAsDate = new Date();
+
+        // --- Signature Pad Logic ---
+        const canvas = document.getElementById('signature-canvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+
+        function resizeCanvas() {
+            // ปรับขนาดความละเอียดให้คมชัดขึ้น
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            ctx.scale(ratio, ratio);
+            // ตั้งค่าลายเส้น
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+        }
+
+        function getPointerPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const pos = getPointerPos(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+            e.preventDefault(); // ป้องกันเลื่อนหน้าจอ
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const pos = getPointerPos(e);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            e.preventDefault();
+        }
+
+        function stopDrawing() {
+            if (isDrawing) {
+                ctx.closePath();
+                isDrawing = false;
+            }
+        }
+
+        // Mouse events
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        // Touch events
+        canvas.addEventListener('touchstart', startDrawing, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
+        canvas.addEventListener('touchend', stopDrawing);
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function handleStaffChange(id) {
+            const select = document.getElementById(id);
+            if (select.value) {
+                currentSigningId = id;
+                const personName = select.options[select.selectedIndex].text;
+                document.getElementById('sign-person-name').textContent = personName;
+                document.getElementById('signature-modal').classList.remove('hidden');
+                setTimeout(resizeCanvas, 50); // รอให้ Modal เปิดเสร็จก่อนเพื่อให้ขนาด canvas แม่นยำ
+                clearCanvas();
+            } else {
+                clearSignature(id);
+            }
+        }
+
+        function closeSignatureModal() {
+            document.getElementById('signature-modal').classList.add('hidden');
+            // ถ้ายกเลิก โดยที่ยังไม่มีลายเซ็นให้รีเซ็ต dropdown กลับ
+            if (!signatures[currentSigningId]) {
+                document.getElementById(currentSigningId).value = "";
+            }
+            currentSigningId = '';
+        }
+
+        function saveSignature() {
+            // ตรวจสอบว่ามีการเซ็นหรือไม่ (แบบง่ายๆ โดยเช็คว่ามีพิกเซลที่ถูกวาดไหม แต่เพื่อความเร็วจะแปลงเลย)
+            const blank = document.createElement('canvas');
+            blank.width = canvas.width;
+            blank.height = canvas.height;
+            if (canvas.toDataURL() === blank.toDataURL()) {
+                alert('กรุณาเซ็นชื่อก่อนกดยืนยัน หรือกดยกเลิกหากไม่ต้องการเซ็น');
+                return;
+            }
+
+            const dataUrl = canvas.toDataURL('image/png');
+            signatures[currentSigningId] = dataUrl;
+
+            // แสดงรูปลงในการ์ด
+            document.getElementById(`sign-img-${currentSigningId}`).src = dataUrl;
+            document.getElementById(`sign-box-${currentSigningId}`).classList.remove('hidden');
+
+            document.getElementById('signature-modal').classList.add('hidden');
+        }
+
+        function clearSignature(id) {
+            signatures[id] = null;
+            document.getElementById(`sign-img-${id}`).src = "";
+            document.getElementById(`sign-box-${id}`).classList.add('hidden');
+            document.getElementById(id).value = "";
+        }
+        // --- End Signature Logic ---
+
+
+        // Tab switching
+        function showTab(tab) {
+            document.querySelectorAll('[id^="content-"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('[id^="tab-"]').forEach(el => {
+                el.classList.remove('text-emerald-700', 'border-emerald-600', 'bg-emerald-50');
+                el.classList.add('text-gray-500', 'border-transparent');
+            });
+            document.getElementById('content-' + tab).classList.remove('hidden');
+            const activeTab = document.getElementById('tab-' + tab);
+            activeTab.classList.add('text-emerald-700', 'border-emerald-600', 'bg-emerald-50');
+            activeTab.classList.remove('text-gray-500', 'border-transparent');
+
+            if (tab === 'summary') updateSummary();
+            if (tab === 'history') updateHistory();
+        }
+
+        // Calculate totals
+        function calculateTotals() {
+            let grandTotal = 0;
+            let totalCounter = 0;
+            let totalPhone = 0;
+            let totalOSS = 0;
+            let totalExpert = 0;
+            let totalSat = [0, 0, 0, 0, 0];
+
+            document.querySelectorAll('.service-row[data-service]').forEach(row => {
+                const counter = parseInt(row.querySelector('.counter-input')?.value) || 0;
+                const phone = parseInt(row.querySelector('.phone-input')?.value) || 0;
+                const oss = parseInt(row.querySelector('.oss-input')?.value) || 0;
+                const expert = parseInt(row.querySelector('.expert-input')?.value) || 0;
+                const total = counter + phone;
+
+                const totalDisplay = row.querySelector('.total-display');
+                if (totalDisplay) totalDisplay.textContent = total;
+
+                grandTotal += total;
+                totalCounter += counter;
+                totalPhone += phone;
+                totalOSS += oss;
+                totalExpert += expert;
+
+                // นับผลรวมความพึงพอใจด้านล่าง
+                totalSat[0] += parseInt(row.querySelector('.sat-input-1')?.value) || 0;
+                totalSat[1] += parseInt(row.querySelector('.sat-input-2')?.value) || 0;
+                totalSat[2] += parseInt(row.querySelector('.sat-input-3')?.value) || 0;
+                totalSat[3] += parseInt(row.querySelector('.sat-input-4')?.value) || 0;
+                totalSat[4] += parseInt(row.querySelector('.sat-input-5')?.value) || 0;
+            });
+
+            // Update grand total and bottom row
+            document.getElementById('grand-total').textContent = grandTotal;
+            document.getElementById('total-counter').textContent = totalCounter;
+            document.getElementById('total-phone').textContent = totalPhone;
+            document.getElementById('table-grand-total').textContent = grandTotal;
+            document.getElementById('total-oss').textContent = totalOSS;
+            document.getElementById('total-expert').textContent = totalExpert;
+            for (let i = 0; i < 5; i++) {
+                document.getElementById(`total-sat-${i + 1}`).textContent = totalSat[i];
+            }
+        }
+
+        // ดักจับการกรอกคะแนนความพึงพอใจไม่ให้เกินยอดรวมของผู้รับบริการในแถวนั้น
+        document.querySelectorAll('.sat-input').forEach(input => {
+            input.addEventListener('input', function() {
+                const row = this.closest('.service-row');
+                if (!row) return;
+
+                // ดึงยอดรวมผู้รับบริการในแถวนี้ (จุดบริการ + โทรศัพท์)
+                const counter = parseInt(row.querySelector('.counter-input')?.value) || 0;
+                const phone = parseInt(row.querySelector('.phone-input')?.value) || 0;
+                const maxAllowed = counter + phone;
+
+                // คำนวณผลรวมคะแนนความพึงพอใจที่กรอกไปแล้วในแถวนี้
+                const sat1 = parseInt(row.querySelector('.sat-input-1')?.value) || 0;
+                const sat2 = parseInt(row.querySelector('.sat-input-2')?.value) || 0;
+                const sat3 = parseInt(row.querySelector('.sat-input-3')?.value) || 0;
+                const sat4 = parseInt(row.querySelector('.sat-input-4')?.value) || 0;
+                const sat5 = parseInt(row.querySelector('.sat-input-5')?.value) || 0;
+                
+                const totalSat = sat1 + sat2 + sat3 + sat4 + sat5;
+
+                // ถ้ากรอกเกินลิมิต ให้ปรับค่าที่เพิ่งพิมพ์ให้ลดลงมาเหลือเท่าที่กรอกได้สูงสุด
+                if (totalSat > maxAllowed) {
+                    const excess = totalSat - maxAllowed;
+                    let newValue = (parseInt(this.value) || 0) - excess;
+                    
+                    // ป้องกันค่าติดลบกรณีมีข้อผิดพลาด
+                    if(newValue < 0) newValue = 0; 
+                    
+                    this.value = newValue;
+                    
+                    // แสดงแจ้งเตือนมุมขวาล่างให้เจ้าหน้าที่ทราบ
+                    showToast(`คะแนนรวมต้องไม่เกินยอดผู้รับบริการ (${maxAllowed} ราย)`, 'error');
+                }
+
+                calculateTotals();
+            });
+        });
+
+        // สำหรับช่องกรอกคะแนนความพึงพอใจ ให้แค่คำนวณยอดรวมปกติเวลาถูกพิมพ์แก้
+        document.querySelectorAll('.sat-input').forEach(input => {
+            input.addEventListener('input', calculateTotals);
+        });
+
+        // Toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Save data function
+        async function saveData() {
+            if (isSaving) return; // ป้องกันการกดปุ่มเบิ้ล
+
+            const saveBtn = document.getElementById('save-btn');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<span class="animate-spin">⏳</span> กำลังบันทึก...';
+            saveBtn.disabled = true;
+            isSaving = true; // เปิดสถานะว่ากำลังบันทึกอยู่
+
+            const reportDate = document.getElementById('report-date').value;
+            const rows = document.querySelectorAll('.service-row[data-service]');
+
+            try {
+                let recordsToSave = [];
+
+                for (const row of rows) {
+                    const serviceId = row.dataset.service;
+                    const counter = parseInt(row.querySelector('.counter-input')?.value) || 0;
+                    const phone = parseInt(row.querySelector('.phone-input')?.value) || 0;
+                    const oss = parseInt(row.querySelector('.oss-input')?.value) || 0;
+                    const expert = parseInt(row.querySelector('.expert-input')?.value) || 0;
+                    const otherText = row.querySelector('.other-text')?.value || '';
+
+                    const sat1 = parseInt(row.querySelector('.sat-input-1')?.value) || 0;
+                    const sat2 = parseInt(row.querySelector('.sat-input-2')?.value) || 0;
+                    const sat3 = parseInt(row.querySelector('.sat-input-3')?.value) || 0;
+                    const sat4 = parseInt(row.querySelector('.sat-input-4')?.value) || 0;
+                    const sat5 = parseInt(row.querySelector('.sat-input-5')?.value) || 0;
+
+                    if (counter > 0 || phone > 0 || oss > 0 || expert > 0 || sat1 > 0 || sat2 > 0 || sat3 > 0 || sat4 > 0 || sat5 > 0) {
+                        const payloadData = {
+                            service_date: reportDate,
+                            counter_count: counter,
+                            phone_count: phone,
+                            one_stop_service: oss,
+                            send_to_expert: expert,
+                            staff_1: document.getElementById('staff-1').value,
+                            staff_2: document.getElementById('staff-2').value,
+                            group_head: document.getElementById('group-head').value,
+                            provincial_treasury: document.getElementById('provincial-treasury').value,
+                            sign_staff_1: signatures['staff-1'] || '',
+                            sign_staff_2: signatures['staff-2'] || '',
+                            sign_group_head: signatures['group-head'] || '',
+                            sign_provincial_treasury: signatures['provincial-treasury'] || '',
+                            satisfaction_1: sat1,
+                            satisfaction_2: sat2,
+                            satisfaction_3: sat3,
+                            satisfaction_4: sat4,
+                            satisfaction_5: sat5,
+                            other_text: otherText,
+                            recipient_civil_servant: parseInt(document.getElementById('recipient-civil-servant').value) || 0,
+                            recipient_contractor: parseInt(document.getElementById('recipient-contractor').value) || 0,
+                            recipient_pensioner: parseInt(document.getElementById('recipient-pensioner').value) || 0,
+                            recipient_welfare_card: parseInt(document.getElementById('recipient-welfare-card').value) || 0,
+                            recipient_general: parseInt(document.getElementById('recipient-general').value) || 0
+                        };
+                        recordsToSave.push({ serviceId, payloadData });
+                    }
+                }
+
+                if (currentRecordCount + recordsToSave.length > 999) {
+                    showToast('จำนวนข้อมูลเกินขีดจำกัดการบันทึกแล้ว (999 รายการ)', 'error');
+                    saveBtn.innerHTML = originalText;
+                    saveBtn.disabled = false;
+                    isSaving = false;
+                    return;
+                }
+
+                // ส่งคำสั่งบันทึกข้อมูล
+                for (const item of recordsToSave) {
+                    const existingRecord = allData.find(d => d.service_date === reportDate && d.service_id === item.serviceId);
+                    if (existingRecord) {
+                        const result = await window.dataSdk.update({ ...existingRecord, ...item.payloadData });
+                        if (!result.isOk) throw new Error('Update failed');
+                    } else {
+                        const result = await window.dataSdk.create({
+                            service_id: item.serviceId,
+                            created_at: new Date().toISOString(),
+                            ...item.payloadData
+                        });
+                        if (!result.isOk) throw new Error('Create failed');
+                    }
+                }
+
+                // รีเฟรชฐานข้อมูลเบื้องหลังแค่ครั้งเดียวเมื่อทำงานเสร็จหมดแล้ว
+                await window.dataSdk.refresh();
+                showToast('บันทึกข้อมูลสำเร็จ!');
+            } catch (error) {
+                console.error(error);
+                showToast('เกิดข้อผิดพลาดในการบันทึก', 'error');
+            }
+
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+            isSaving = false; // ปิดสถานะการบันทึก
+        }
+
+        // Load data for specific date
+        function loadDataForDate(date) {
+            if (isSaving) return; // เพิ่มบรรทัดนี้: ข้ามการล้างหน้าจอหากกำลังกดบันทึกอยู่
+            const dateData = allData.filter(d => d.service_date === date);
+
+            // Reset all inputs
+            document.querySelectorAll('.service-row[data-service]').forEach(row => {
+                row.querySelector('.counter-input').value = 0;
+                row.querySelector('.phone-input').value = 0;
+                row.querySelector('.oss-input').value = 0;
+                row.querySelector('.expert-input').value = 0;
+
+                if (row.querySelector('.sat-input-1')) row.querySelector('.sat-input-1').value = 0;
+                if (row.querySelector('.sat-input-2')) row.querySelector('.sat-input-2').value = 0;
+                if (row.querySelector('.sat-input-3')) row.querySelector('.sat-input-3').value = 0;
+                if (row.querySelector('.sat-input-4')) row.querySelector('.sat-input-4').value = 0;
+                if (row.querySelector('.sat-input-5')) row.querySelector('.sat-input-5').value = 0;
+
+                if (row.querySelector('.other-text')) row.querySelector('.other-text').value = '';
+            });
+
+            // Reset recipient types
+            document.getElementById('recipient-civil-servant').value = 0;
+            document.getElementById('recipient-contractor').value = 0;
+            document.getElementById('recipient-pensioner').value = 0;
+            document.getElementById('recipient-welfare-card').value = 0;
+            document.getElementById('recipient-general').value = 0;
+
+            // Reset Staff
+            const staffIds = ['staff-1', 'staff-2', 'group-head', 'provincial-treasury'];
+            staffIds.forEach(id => {
+                document.getElementById(id).value = "";
+                signatures[id] = null;
+                document.getElementById(`sign-img-${id}`).src = "";
+                document.getElementById(`sign-box-${id}`).classList.add('hidden');
+            });
+
+            // Populate with saved data
+            dateData.forEach(record => {
+                const row = document.querySelector(`[data-service="${record.service_id}"]`);
+                if (row) {
+                    row.querySelector('.counter-input').value = record.counter_count || 0;
+                    row.querySelector('.phone-input').value = record.phone_count || 0;
+                    row.querySelector('.oss-input').value = record.one_stop_service || 0;
+                    row.querySelector('.expert-input').value = record.send_to_expert || 0;
+
+                    if (row.querySelector('.sat-input-1')) row.querySelector('.sat-input-1').value = record.satisfaction_1 || 0;
+                    if (row.querySelector('.sat-input-2')) row.querySelector('.sat-input-2').value = record.satisfaction_2 || 0;
+                    if (row.querySelector('.sat-input-3')) row.querySelector('.sat-input-3').value = record.satisfaction_3 || 0;
+                    if (row.querySelector('.sat-input-4')) row.querySelector('.sat-input-4').value = record.satisfaction_4 || 0;
+                    if (row.querySelector('.sat-input-5')) row.querySelector('.sat-input-5').value = record.satisfaction_5 || 0;
+
+                    if (row.querySelector('.other-text') && record.other_text) {
+                        row.querySelector('.other-text').value = record.other_text;
+                    }
+                }
+
+                // Set staff info from first record
+                if (record.staff_1) document.getElementById('staff-1').value = record.staff_1;
+                if (record.staff_2) document.getElementById('staff-2').value = record.staff_2;
+                if (record.group_head) document.getElementById('group-head').value = record.group_head;
+                if (record.provincial_treasury) document.getElementById('provincial-treasury').value = record.provincial_treasury;
+
+                // Set recipient types from first record
+                if (record.recipient_civil_servant) document.getElementById('recipient-civil-servant').value = record.recipient_civil_servant;
+                if (record.recipient_contractor) document.getElementById('recipient-contractor').value = record.recipient_contractor;
+                if (record.recipient_pensioner) document.getElementById('recipient-pensioner').value = record.recipient_pensioner;
+                if (record.recipient_welfare_card) document.getElementById('recipient-welfare-card').value = record.recipient_welfare_card;
+                if (record.recipient_general) document.getElementById('recipient-general').value = record.recipient_general;
+
+                // Set signatures if available
+                const setSig = (id, base64) => {
+                    if (base64 && base64.trim() !== "") {
+                        signatures[id] = base64;
+                        document.getElementById(`sign-img-${id}`).src = base64;
+                        document.getElementById(`sign-box-${id}`).classList.remove('hidden');
+                    }
+                };
+                setSig('staff-1', record.sign_staff_1);
+                setSig('staff-2', record.sign_staff_2);
+                setSig('group-head', record.sign_group_head);
+                setSig('provincial-treasury', record.sign_provincial_treasury);
+            });
+
+            calculateTotals();
+        }
+
+        // Update summary view
+        function updateSummary() {
+            const reportDate = document.getElementById('report-date').value;
+            const dateData = allData.filter(d => d.service_date === reportDate);
+            const container = document.getElementById('summary-content');
+
+            if (dateData.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">ไม่มีข้อมูลสำหรับวันที่เลือก</p>';
+                return;
+            }
+
+            let totalCounter = 0, totalPhone = 0, totalOSS = 0, totalExpert = 0;
+            let satCounts = [0, 0, 0, 0, 0];
+            let recipientTotals = { civil: 0, contractor: 0, pensioner: 0, welfare: 0, general: 0 };
+            let servicesByCategory = {};
+
+            dateData.forEach(d => {
+                totalCounter += d.counter_count || 0;
+                totalPhone += d.phone_count || 0;
+                totalOSS += d.one_stop_service || 0;
+                totalExpert += d.send_to_expert || 0;
+                satCounts[0] += d.satisfaction_1 || 0;
+                satCounts[1] += d.satisfaction_2 || 0;
+                satCounts[2] += d.satisfaction_3 || 0;
+                satCounts[3] += d.satisfaction_4 || 0;
+                satCounts[4] += d.satisfaction_5 || 0;
+                recipientTotals.civil += d.recipient_civil_servant || 0;
+                recipientTotals.contractor += d.recipient_contractor || 0;
+                recipientTotals.pensioner += d.recipient_pensioner || 0;
+                recipientTotals.welfare += d.recipient_welfare_card || 0;
+                recipientTotals.general += d.recipient_general || 0;
+
+                // Group by category (first digit)
+                const category = d.service_id.split('.')[0];
+                if (!servicesByCategory[category]) {
+                    servicesByCategory[category] = { services: [], total: 0 };
+                }
+                const serviceTotal = (d.counter_count || 0) + (d.phone_count || 0);
+                servicesByCategory[category].services.push({
+                    id: d.service_id,
+                    total: serviceTotal,
+                    counter: d.counter_count || 0,
+                    phone: d.phone_count || 0,
+                    oss: d.one_stop_service || 0,
+                    expert: d.send_to_expert || 0,
+                    other: d.other_text || ''
+                });
+                servicesByCategory[category].total += serviceTotal;
+            });
+
+            const totalResponses = satCounts.reduce((a, b) => a + b, 0);
+            const avgSat = totalResponses > 0 ?
+                ((satCounts[0] * 1 + satCounts[1] * 2 + satCounts[2] * 3 + satCounts[3] * 4 + satCounts[4] * 5) / totalResponses).toFixed(2) : 0;
+
+            const thaiDate = new Date(reportDate).toLocaleDateString('th-TH', {
+                year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+            });
+
+            // Get staff names
+            const firstRecord = dateData[0];
+            const staff1 = firstRecord.staff_1 || '-';
+            const staff2 = firstRecord.staff_2 || '-';
+            const groupHead = firstRecord.group_head || '-';
+            const treasury = firstRecord.provincial_treasury || '-';
+
+            // Get Signatures for display
+            const getSignImgHtml = (base64) => {
+                return base64 ? `<img src="${base64}" class="h-10 object-contain mx-auto mt-2 opacity-80 mix-blend-multiply">` : '<div class="h-10 mt-2 text-xs text-gray-400 flex items-center justify-center border-t border-dashed mt-2 pt-1">(ไม่มีลายเซ็น)</div>';
+            };
+
+            container.innerHTML = `
+<div class="bg-gradient-to-r bg-blue-700 to-teal-500 text-white rounded-xl p-6 mb-6">
+<div class="text-center">
+<h2 class="text-3xl font-bold mb-2">📋 รายงานประจำวัน</h2>
+<p class="text-emerald-100 text-lg">${thaiDate}</p>
+</div>
+</div>
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+<div class="bg-emerald-50 rounded-xl p-4 text-center border-l-4 border-emerald-600">
+<div class="text-3xl font-bold text-emerald-600">${totalCounter + totalPhone}</div>
+<div class="text-sm text-gray-600 mt-1">รวมผู้รับบริการ</div>
+</div>
+<div class="bg-blue-50 rounded-xl p-4 text-center border-l-4 border-blue-600">
+<div class="text-3xl font-bold text-blue-600">${totalCounter}</div>
+<div class="text-sm text-gray-600 mt-1">ณ จุดบริการ</div>
+</div>
+<div class="bg-purple-50 rounded-xl p-4 text-center border-l-4 border-purple-600">
+<div class="text-3xl font-bold text-purple-600">${totalPhone}</div>
+<div class="text-sm text-gray-600 mt-1">ทางโทรศัพท์</div>
+</div>
+<div class="bg-amber-50 rounded-xl p-4 text-center border-l-4 border-amber-600">
+<div class="text-3xl font-bold text-amber-600">${avgSat}/5</div>
+<div class="text-sm text-gray-600 mt-1">คะแนนพึงพอใจ</div>
+</div>
+</div>
+
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-teal-50 rounded-xl p-4 border-l-4 border-teal-600">
+<div class="flex items-center justify-between">
+<div>
+<div class="text-2xl font-bold text-teal-600">${totalOSS}</div>
+<div class="text-sm text-gray-600">บริการ One Stop Service</div>
+</div>
+<div class="text-4xl opacity-30">🏢</div>
+</div>
+</div>
+<div class="bg-rose-50 rounded-xl p-4 border-l-4 border-rose-600">
+<div class="flex items-center justify-between">
+<div>
+<div class="text-2xl font-bold text-rose-600">${totalExpert}</div>
+<div class="text-sm text-gray-600">ส่งต่อผู้เชี่ยวชาญ</div>
+</div>
+<div class="text-4xl opacity-30">👤</div>
+</div>
+</div>
+</div>
+
+<div class="bg-white rounded-xl p-6 mb-6 border-l-4 border-emerald-600">
+<h3 class="font-bold text-emerald-800 mb-4 text-lg">📊 สรุปการให้บริการแยกตามหมวด</h3>
+<div class="space-y-3">
+${Object.keys(servicesByCategory).sort().map(category => {
+                const categoryNames = {
+                    '1': '1. งาน One Stop Service',
+                    '2': '2. ด้านการจัดซื้อจัดจ้าง',
+                    '3': '3. New GFMIS Thai',
+                    '4': '4. บำเหน็จบำนาญ',
+                    '5': '5. กฎหมายการเงินการคลัง',
+                    '6': '6. ข้อมูลเศรษฐกิจ',
+                    '7': '7. งานนโยบายกระทรวง'
+                };
+                const services = servicesByCategory[category].services;
+                const total = servicesByCategory[category].total;
+                return `
+<div class="bg-gray-50 rounded-lg p-3">
+<div class="flex justify-between items-center mb-2">
+<span class="font-semibold text-gray-700">${categoryNames[category]}</span>
+<span class="text-lg font-bold text-emerald-600">${total} ราย</span>
+</div>
+<div class="pl-4 space-y-1">
+${services.map(s => `
+<div class="text-sm text-gray-600 flex justify-between">
+<span>• ${s.id} ${s.other ? '(' + s.other + ')' : ''}</span>
+<span class="font-medium">${s.total}</span>
+</div>
+`).join('')}
+</div>
+</div>
+`;
+            }).join('')}
+</div>
+</div>
+
+<div class="bg-white rounded-xl p-6 mb-6 border-l-4 border-amber-600">
+<h3 class="font-bold text-amber-800 mb-4 text-lg">😊 ระดับความพึงพอใจ</h3>
+<div class="grid grid-cols-5 gap-2">
+${[
+                    { emoji: '😠', label: 'ไม่พอใจมาก', value: satCounts[0] },
+                    { emoji: '😕', label: 'ไม่พอใจ', value: satCounts[1] },
+                    { emoji: '😐', label: 'ปานกลาง', value: satCounts[2] },
+                    { emoji: '🙂', label: 'พอใจ', value: satCounts[3] },
+                    { emoji: '😊', label: 'พอใจมาก', value: satCounts[4] }
+                ].map((item, i) => `
+<div class="text-center p-3 rounded-lg bg-gray-50 border-2 border-gray-200">
+<div class="text-2xl mb-1">${item.emoji}</div>
+<div class="text-xl font-bold text-gray-700">${item.value}</div>
+<div class="text-xs text-gray-500 mt-1">${item.label}</div>
+</div>
+`).join('')}
+</div>
+${totalResponses > 0 ? `<p class="text-sm text-gray-600 mt-3 text-center">รวมจำนวนคำตอบ: ${totalResponses} รายการ</p>` : ''}
+</div>
+
+<div class="bg-white rounded-xl p-6 mb-6 border-l-4 border-blue-600">
+<h3 class="font-bold text-blue-800 mb-4 text-lg">👥 ประเภทผู้รับบริการ</h3>
+<div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+<div class="text-center p-4 rounded-lg bg-blue-50">
+<div class="text-2xl font-bold text-blue-600">${recipientTotals.civil}</div>
+<div class="text-xs text-gray-600 mt-1">ข้าราชการ/เจ้าหน้าที่</div>
+</div>
+<div class="text-center p-4 rounded-lg bg-green-50">
+<div class="text-2xl font-bold text-green-600">${recipientTotals.contractor}</div>
+<div class="text-xs text-gray-600 mt-1">ผู้ค้า/ผู้ประกอบการ</div>
+</div>
+<div class="text-center p-4 rounded-lg bg-orange-50">
+<div class="text-2xl font-bold text-orange-600">${recipientTotals.pensioner}</div>
+<div class="text-xs text-gray-600 mt-1">ผู้รับบำนาญ</div>
+</div>
+<div class="text-center p-4 rounded-lg bg-purple-50">
+<div class="text-2xl font-bold text-purple-600">${recipientTotals.welfare}</div>
+<div class="text-xs text-gray-600 mt-1">ผู้มีบัตรสวัสดิการ</div>
+</div>
+<div class="text-center p-4 rounded-lg bg-pink-50">
+<div class="text-2xl font-bold text-pink-600">${recipientTotals.general}</div>
+<div class="text-xs text-gray-600 mt-1">ประชาชนทั่วไป</div>
+</div>
+</div>
+</div>
+
+<div class="bg-white rounded-xl p-6 border-l-4 border-teal-600">
+<h3 class="font-bold text-teal-800 mb-4 text-lg">📝 เจ้าหน้าที่บริการวัน</h3>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="p-3 bg-teal-50 rounded-lg text-center flex flex-col justify-between">
+<div>
+    <div class="text-xs text-teal-600 font-semibold mb-1">เจ้าหน้าที่คนที่ 1</div>
+    <div class="text-sm font-medium text-gray-800">${staff1}</div>
+</div>
+${getSignImgHtml(firstRecord.sign_staff_1)}
+</div>
+<div class="p-3 bg-teal-50 rounded-lg text-center flex flex-col justify-between">
+<div>
+    <div class="text-xs text-teal-600 font-semibold mb-1">เจ้าหน้าที่คนที่ 2</div>
+    <div class="text-sm font-medium text-gray-800">${staff2}</div>
+</div>
+${getSignImgHtml(firstRecord.sign_staff_2)}
+</div>
+<div class="p-3 bg-teal-50 rounded-lg text-center flex flex-col justify-between">
+<div>
+    <div class="text-xs text-teal-600 font-semibold mb-1">หัวหน้ากลุ่มงาน</div>
+    <div class="text-sm font-medium text-gray-800">${groupHead}</div>
+</div>
+${getSignImgHtml(firstRecord.sign_group_head)}
+</div>
+<div class="p-3 bg-teal-50 rounded-lg text-center flex flex-col justify-between">
+<div>
+    <div class="text-xs text-teal-600 font-semibold mb-1">คลังจังหวัด</div>
+    <div class="text-sm font-medium text-gray-800">${treasury}</div>
+</div>
+${getSignImgHtml(firstRecord.sign_provincial_treasury)}
+</div>
+</div>
+</div>
+`;
+        }
+
+        // Update history view
+        function updateHistory() {
+            const container = document.getElementById('history-list');
+            // Group by date
+            const dateGroups = {};
+            allData.forEach(d => {
+                if (!dateGroups[d.service_date]) {
+                    dateGroups[d.service_date] = [];
+                }
+                dateGroups[d.service_date].push(d);
+            });
+
+            const dates = Object.keys(dateGroups).sort().reverse();
+
+            if (dates.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">ยังไม่มีข้อมูลที่บันทึก</p>';
+                return;
+            }
+
+            container.innerHTML = dates.map(date => {
+                const records = dateGroups[date];
+                const total = records.reduce((sum, r) => sum + (r.counter_count || 0) + (r.phone_count || 0), 0);
+                const thaiDate = new Date(date).toLocaleDateString('th-TH', {
+                    year: 'numeric', month: 'long', day: 'numeric'
+                });
+                return `
+<div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-emerald-50 cursor-pointer transition" onclick="loadHistoryDate('${date}')">
+<div>
+<div class="font-semibold text-gray-800">📅 ${thaiDate}</div>
+<div class="text-sm text-gray-500">${records.length} รายการบริการ</div>
+</div>
+<div class="text-right">
+<div class="text-2xl font-bold text-emerald-600">${total}</div>
+<div class="text-xs text-gray-500">ราย</div>
+</div>
+</div>
+`;
+            }).join('');
+        }
+
+        // Load history date
+        function loadHistoryDate(date) {
+            document.getElementById('report-date').value = date;
+            loadDataForDate(date);
+            showTab('input');
+        }
+
+        // Date change listener
+        document.getElementById('report-date').addEventListener('change', function () {
+            loadDataForDate(this.value);
+        });
+
+        // Data handler
+        const dataHandler = {
+            onDataChanged(data) {
+                allData = data;
+                currentRecordCount = data.length;
+                loadDataForDate(document.getElementById('report-date').value);
+            }
+        };
+
+        // Element SDK config change handler
+        async function onConfigChange(config) {
+            const officeName = config.office_name || defaultConfig.office_name;
+            const reportTitle = config.report_title || defaultConfig.report_title;
+            document.getElementById('office-name').textContent = officeName;
+            document.getElementById('report-title').textContent = reportTitle;
+        }
+
+        // Populate staff dropdowns
+        function populateStaffSelects() {
+            const selects = ['staff-1', 'staff-2', 'group-head', 'provincial-treasury'];
+            selects.forEach(id => {
+                const select = document.getElementById(id);
+                staffList.forEach(staff => {
+                    const option = document.createElement('option');
+                    option.value = staff.name;
+                    option.textContent = `${staff.name} (${staff.position})`;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        // SDK Shim for Google Apps Script
+        window.dataSdk = {
+            init: async (handler) => {
+                try {
+                    console.log("Initializing dataSdk...");
+                    const data = await new Promise((resolve, reject) => {
+                        google.script.run
+                            .withSuccessHandler(resolve)
+                            .withFailureHandler(reject)
+                            .getRecords();
+                    });
+                    if (handler && handler.onDataChanged) {
+                        handler.onDataChanged(data);
+                    }
+                    return { isOk: true };
+                } catch (err) {
+                    console.error("dataSdk.init Error:", err);
+                    return { isOk: false, error: err };
+                }
+            },
+            create: async (record) => {
+                try {
+                    const result = await new Promise((resolve, reject) => {
+                        google.script.run
+                            .withSuccessHandler(resolve)
+                            .withFailureHandler(reject)
+                            .createRecord(record);
+                    });
+                    // ปิดคำสั่ง refresh ตรงนี้ทิ้งไป เพื่อไม่ให้หน้าจอกะพริบทุกครั้งที่เซฟทีละบรรทัด
+                    return result;
+                } catch (err) {
+                    return { isOk: false, error: err };
+                }
+            },
+            update: async (record) => {
+                try {
+                    const result = await new Promise((resolve, reject) => {
+                        google.script.run
+                            .withSuccessHandler(resolve)
+                            .withFailureHandler(reject)
+                            .updateRecord(record);
+                    });
+                    // ปิดคำสั่ง refresh ตรงนี้ทิ้งไปเช่นกัน
+                    return result;
+                } catch (err) {
+                    return { isOk: false, error: err };
+                }
+            },
+            delete: async (record) => {
+                try {
+                    const result = await new Promise((resolve, reject) => {
+                        google.script.run
+                            .withSuccessHandler(resolve)
+                            .withFailureHandler(reject)
+                            .deleteRecord(record);
+                    });
+                    if (result.isOk) {
+                        await window.dataSdk.refresh();
+                    }
+                    return result;
+                } catch (err) {
+                    return { isOk: false, error: err };
+                }
+            },
+            refresh: async () => {
+                try {
+                    const data = await new Promise((resolve, reject) => {
+                        google.script.run
+                            .withSuccessHandler(resolve)
+                            .withFailureHandler(reject)
+                            .getRecords();
+                    });
+                    if (dataHandler && dataHandler.onDataChanged) {
+                        dataHandler.onDataChanged(data);
+                    }
+                } catch (err) {
+                    console.error("Refresh Error:", err);
+                }
+            }
+        };
+
+        async function initApp() {
+            populateStaffSelects();
+
+            // Initialize Data SDK (Shim will handle google.script.run)
+            if (window.dataSdk) {
+                const result = await window.dataSdk.init(dataHandler);
+                if (!result.isOk) {
+                    showToast('ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
+                }
+            }
+
+            calculateTotals();
+        }
+
+        initApp();
+    </script>
+</body>
+
+</html>
