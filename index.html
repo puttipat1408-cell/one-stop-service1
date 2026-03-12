@@ -73,17 +73,23 @@
 
 <body class="h-full bg-gradient-to-br bg-blue-50 via-white to-teal-50">
     <div id="app" class="h-full w-full overflow-auto">
-        <header class="bg-gradient-to-r bg-blue-700 to-teal-600 text-white shadow-lg">
+        <header class="bg-gradient-to-r bg-blue-400 to-teal-600 text-white shadow-lg">
             <div class="max-w-7xl mx-auto px-4 py-6">
                 <div class="flex items-center justify-between">
-                    <div>
-                        <h1 id="report-title" class="text-2xl font-bold">
-                            รายงานสรุปผลการให้บริการและปัญหา/อุปสรรคในการบริการประจำวัน</h1>
-                        <p id="office-name" class="text-white-700 mt-1">สำนักงานคลังจังหวัดสกลนคร</p>
+                    <div class="flex items-center gap-4">
+                        <img src="https://i.postimg.cc/Mp2C34LT/logo.jpg" alt="โลโก้สำนักงาน"
+                            class="w-16 h-16 bg-white rounded-full p-1 object-contain shadow-sm">
+
+                        <div>
+                            <h1 id="report-title" class="text-2xl font-bold">
+                                รายงานสรุปผลการให้บริการและปัญหา/อุปสรรคในการบริการประจำวัน</h1>
+                            <p id="office-name" class="text-white-700 mt-1">สำนักงานคลังจังหวัดสกลนคร</p>
+                        </div>
                     </div>
                     <div class="flex items-center gap-4">
-                        <div class="bg-white/20 rounded-lg px-4 py-2"><label
-                                class="text-sm text-white-700">วันที่</label> <input type="date" id="report-date"
+                        <div class="bg-white/20 rounded-lg px-4 py-2">
+                            <label class="text-sm text-white-700">วันที่</label>
+                            <input type="date" id="report-date"
                                 class="bg-transparent border-none text-white font-semibold focus:outline-none">
                         </div>
                     </div>
@@ -104,7 +110,7 @@
         </nav>
         <main id="content-input" class="max-w-7xl mx-auto px-4 py-6">
             <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div class="bg-gradient-to-r bg-blue-700 to-teal-500 text-white p-4">
+                <div class="bg-gradient-to-r bg-blue-400 to-teal-500 text-white p-4">
                     <div class="grid grid-cols-12 gap-2 text-center text-sm font-semibold">
                         <div class="col-span-3">
                             เรื่องที่ขอรับบริการ
@@ -1048,8 +1054,7 @@
                                     value="0"></div>
                         </div>
                     </div>
-                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-3 items-center bg-blue-50"
-                        data-service="6">
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-3 items-center bg-blue-50" data-service="6">
                         <div class="col-span-3 font-bold text-blue-800">
                             6. ข้อมูลด้านเศรษฐกิจการคลัง
                         </div>
@@ -1094,8 +1099,7 @@
                                     value="0"></div>
                         </div>
                     </div>
-                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-3 items-center bg-blue-50"
-                        data-service="7">
+                    <div class="service-row grid grid-cols-12 gap-2 px-4 py-3 items-center bg-blue-50" data-service="7">
                         <div class="col-span-3 font-bold text-blue-800">
                             7. งานนโยบายกระทรวง/กรม/จังหวัด
                         </div>
@@ -1141,7 +1145,7 @@
                         </div>
                     </div>
                     <div
-                        class="grid grid-cols-12 gap-2 px-4 py-3 items-center bg-gradient-to-r bg-blue-700 to-teal-500 text-white font-bold">
+                        class="grid grid-cols-12 gap-2 px-4 py-3 items-center bg-gradient-to-r bg-blue-400 to-teal-500 text-white font-bold">
                         <div class="col-span-3">
                             รวมทั้งหมด
                         </div>
@@ -1254,7 +1258,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-gradient-to-r bg-blue-700 to-teal-500 p-4">
+                <div class="bg-gradient-to-r bg-blue-400 to-teal-500 p-4">
                     <div class="flex items-center justify-between">
                         <div class="text-white"><span class="text-lg font-semibold">รวมเฉพาะวัน:</span> <span
                                 id="grand-total" class="text-3xl font-bold ml-4">0</span> <span class="ml-2">ราย</span>
@@ -1263,12 +1267,12 @@
                             <span>💾</span> บันทึกข้อมูล </button>
                     </div>
                 </div>
-                
+
             </div>
         </main>
         <main id="content-summary" class="max-w-7xl mx-auto px-4 py-6 hidden">
             <div class="bg-white rounded-2xl shadow-xl p-6">
-                <h2 class="text-xl font-bold text-emerald-800 mb-4">📊 สรุปข้อมูลรายวัน</h2>
+                <h2 class="text-xl font-bold text-emerald-400 mb-4">📊 สรุปข้อมูลรายวัน</h2>
                 <div id="summary-content" class="space-y-4">
                     <p class="text-gray-500 text-center py-8">เลือกวันที่และบันทึกข้อมูลเพื่อดูสรุป</p>
                 </div>
@@ -1276,17 +1280,17 @@
         </main>
         <main id="content-history" class="max-w-7xl mx-auto px-4 py-6 hidden">
             <div class="bg-white rounded-2xl shadow-xl p-6">
-                <h2 class="text-xl font-bold text-emerald-800 mb-4">📅 ประวัติการบันทึกย้อนหลัง</h2>
+                <h2 class="text-xl font-bold text-emerald-400 mb-4">📅 ประวัติการบันทึกย้อนหลัง</h2>
                 <div id="history-list" class="space-y-2">
                     <p class="text-gray-500 text-center py-8">ยังไม่มีข้อมูลที่บันทึก</p>
                 </div>
             </div>
         </main>
         <div class="text-center py-6">
-        <p class="text-gray-500 text-lg font-bold">👨‍💻 พัฒนาโดย นางสาวพรรณลิณี แผนเมือง</p>
-        <p class="text-gray-400 text-sm font-bold">นักวิชาการเงินและบัญชี</p>
-        <p class="text-gray-400 text-sm font-bold">กลุ่มงานวิชาการ</p>
-      </div>
+            <p class="text-gray-500 text-lg font-bold">👨‍💻 พัฒนาโดย นางสาวพรรณลิณี แผนเมือง</p>
+            <p class="text-gray-400 text-sm font-bold">นักวิชาการเงินและบัญชี</p>
+            <p class="text-gray-400 text-sm font-bold">กลุ่มงานวิชาการ</p>
+        </div>
     </div>
 
     <div id="signature-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
@@ -1578,7 +1582,7 @@
 
         // ดักจับการกรอกคะแนนความพึงพอใจไม่ให้เกินยอดรวมของผู้รับบริการในแถวนั้น
         document.querySelectorAll('.sat-input').forEach(input => {
-            input.addEventListener('input', function() {
+            input.addEventListener('input', function () {
                 const row = this.closest('.service-row');
                 if (!row) return;
 
@@ -1593,19 +1597,19 @@
                 const sat3 = parseInt(row.querySelector('.sat-input-3')?.value) || 0;
                 const sat4 = parseInt(row.querySelector('.sat-input-4')?.value) || 0;
                 const sat5 = parseInt(row.querySelector('.sat-input-5')?.value) || 0;
-                
+
                 const totalSat = sat1 + sat2 + sat3 + sat4 + sat5;
 
                 // ถ้ากรอกเกินลิมิต ให้ปรับค่าที่เพิ่งพิมพ์ให้ลดลงมาเหลือเท่าที่กรอกได้สูงสุด
                 if (totalSat > maxAllowed) {
                     const excess = totalSat - maxAllowed;
                     let newValue = (parseInt(this.value) || 0) - excess;
-                    
+
                     // ป้องกันค่าติดลบกรณีมีข้อผิดพลาด
-                    if(newValue < 0) newValue = 0; 
-                    
+                    if (newValue < 0) newValue = 0;
+
                     this.value = newValue;
-                    
+
                     // แสดงแจ้งเตือนมุมขวาล่างให้เจ้าหน้าที่ทราบ
                     showToast(`คะแนนรวมต้องไม่เกินยอดผู้รับบริการ (${maxAllowed} ราย)`, 'error');
                 }
@@ -1884,7 +1888,7 @@
             };
 
             container.innerHTML = `
-<div class="bg-gradient-to-r bg-blue-700 to-teal-500 text-white rounded-xl p-6 mb-6">
+<div class="bg-gradient-to-r bg-blue-400 to-teal-500 text-white rounded-xl p-6 mb-6">
 <div class="text-center">
 <h2 class="text-3xl font-bold mb-2">📋 รายงานประจำวัน</h2>
 <p class="text-emerald-100 text-lg">${thaiDate}</p>
@@ -1932,7 +1936,7 @@
 </div>
 
 <div class="bg-white rounded-xl p-6 mb-6 border-l-4 border-emerald-600">
-<h3 class="font-bold text-emerald-800 mb-4 text-lg">📊 สรุปการให้บริการแยกตามหมวด</h3>
+<h3 class="font-bold text-emerald-400 mb-4 text-lg">📊 สรุปการให้บริการแยกตามหมวด</h3>
 <div class="space-y-3">
 ${Object.keys(servicesByCategory).sort().map(category => {
                 const categoryNames = {
@@ -1993,8 +1997,8 @@ ${totalResponses > 0 ? `<p class="text-sm text-gray-600 mt-3 text-center">รว
 <div class="text-2xl font-bold text-blue-600">${recipientTotals.civil}</div>
 <div class="text-xs text-gray-600 mt-1">ข้าราชการ/เจ้าหน้าที่</div>
 </div>
-<div class="text-center p-4 rounded-lg bg-green-50">
-<div class="text-2xl font-bold text-green-600">${recipientTotals.contractor}</div>
+<div class="text-center p-4 rounded-lg bg-blue-50">
+<div class="text-2xl font-bold text-green-400">${recipientTotals.contractor}</div>
 <div class="text-xs text-gray-600 mt-1">ผู้ค้า/ผู้ประกอบการ</div>
 </div>
 <div class="text-center p-4 rounded-lg bg-orange-50">
